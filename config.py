@@ -46,6 +46,24 @@ class Config:
         'required': ['name', 'longitude', 'latitude']
     }
 
+    HOUMER_VISIT_COORDINATES_SCHEMA = {
+        'type' : 'object',
+        'properties' : {
+            'houmer_id' : {'type':'number'},
+            'date' : {'type':'string', 'pattern':'^[0-9]{4}\-[0-9]{2}\-[0-9]{2}$'}
+        },
+        'required' : ['houmer_id', 'date']
+    }
+
+    HOUMER_EXCEEDED_SPEED_SCHEMA = {
+        'type' : 'object',
+        'properties' : {
+            'houmer_id':{'type':'number'},
+            'date':{'type':'string', 'pattern':'^[0-9]{4}\-[0-9]{2}\-[0-9]{2}$'}
+        },
+        'required' : ['houmer_id', 'date']
+    }
+
     @staticmethod
     def init_app(app):
         pass
