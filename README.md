@@ -16,31 +16,31 @@
 - Por simplicidad, para el cálculo de las velocidades se consideran sólo las posiciones (no las visitas a las propiedades).
 ![Diagrama para algunos supuestos](./drawings/supuestos.png)
 
-######Arquitectura
+###### Arquitectura
 Se considera una arquitectura simple con un servidor que expone rutas (end-points) y que internamente se conecta con una base de datos.
 El servidor es stateless por lo que no guarda información de sesiones, ni cookies, ni estados particulares de las peticiones mismas; cualquier persistencia
 se hace al modelo de datos expuesto en la base de datos.
 ![Diagrama para algunos supuestos](./drawings/arquitectura.png)
-######Tech stack
+###### Tech stack
 - El lenguaje de programación es Python 3.10.
 - Para el servidor se utiliza el web framework Flask.
 - Para la base de datos se utiliza Mysql 8.0.29.
 - Las librerías utilizadas se pueden ver en [requirements](./requirements.txt)
 - Se utiliza un ORM mediante SQLAlchemy; la creación de las tablas se hace automáticamente.
-######Diagrama Entidad-Relación
+###### Diagrama Entidad-Relación
 Se considera el siguiente diagrama entidad relación para la base de datos.
 ![Diagrama entidad relación](./drawings/er.png)
 - Un Houmer puede tener asociadas cero o más posiciones (houmer_position).
 - Una visita está asociada a una propiedad (real_state) y un Houmer en cierto intervalo de tiempo.
 - Una propiedad queda determinada por su latitud y longitud.
 - Un Houmer puede tener cero o más visitas (houmer_visit_real_state).
-######Control de versiones
+###### Control de versiones
 Se utiliza GIT con un marco de trabajo [GitFlow](https://www.gitkraken.com/learn/git/git-flow) simplificado:
 - Los nombres de ramas se separan en feature/ release/ (por el momento no existen hotfix)
 - La rama develop es la rama main (por simplicidad).
 - No se utilizaron tags (por simplicidad).
 
-######Estructura de directorios
+###### Estructura de directorios
 La estructura de directorios es la siguiente:
 ![Diagrama entidad relación](./drawings/estructura_directorios.png)
 - config.py: mantiene configuración para ambientes: development, testing y productivo.
@@ -53,16 +53,165 @@ La estructura de directorios es la siguiente:
 - houm_challenge.md: archivo que contiene en markdown las instrucciones del challenge.
 
 
-##Base de datos
+## Base de datos
 Se utiliza base de datos relacional considerando que el problema supone relaciones intrínsecas
 entre los Houmers y las propiedades (visitas y posiciones). 
 
-##Correr en local
+## Ejecución en local
 
-##Seguridad
+ATENCIÓN: Las tablas necesarias se crean automáticamente al inicio (en caso de no estar creadas) dado
+que se utiliza SQLAlchemy como ORM. Crearlas manualmente puede causar errores en la ejecución. 
+Los schemas de las bases correspondientes a los distintos ambientes deben crearse manualmente.
+Los usuarios y permisos de los schemas en la base de datos deben crearse manualmente. 
+ 
+
+### Configuración y ejecución en Windows
+- ``` pip3 install -r requirements.txt ``` para instalar dependencias de librerías
+- ``` set HOUM_DEVELOPMENT_DATABASE_URI='mysql+pymysql://<development_user>:<development_user_password>@localhost:<port>/development' ``` Para correr en modo Debugger sin WSGI (usando correspondiente schema, usuario, password y puerto para cada ambiente)
+- ``` set HOUM_TESTING_DATABASE_URI='mysql+pymysql://<testing_user>:<testing_user_password>@localhost:<port>/testing' ``` Para correr en modo Testing sin WSGI (usando correspondiente schema, usuario, password y puerto para cada ambiente)
+- ``` set HOUM_PRODUCTIN_DATABASE_URI='mysql+pymysql://<testing_user>:<production_user_password>@localhost:<port>/production' ``` Para correr en modo Producción sin WSGI (usando correspondiente schema, usuario, password y puerto para cada ambiente)
+- ``` set API_SECRET_KEY="development"```
+- ``` set APP_ENVIRONMENT="[<development>|<testing>|<production>]"``` <...> dependiendo del ambiente a correr. 
+- ``` python3 main.py ``` dentro del directorio del proyecto para correr sin WSGI (no recomendado para ambientes productivos)
+- Para correr utilizando WSGI (en este caso waitress para Windows)
+- ``` pip3 install waitress```
+- ``` waitress-serve --listen=localhost:5000 main:app ```
+### Configuración y ejecución Linux (experimental, dado que todo fue probado en Windows)
+- ``` pip3 install -r requirements.txt ``` para instalar dependencias de librerías
+- ``` export HOUM_DEVELOPMENT_DATABASE_URI='mysql+pymysql://<development_user>:<development_user_password>@localhost:<port>/development' ``` Para correr en modo Debugger sin WSGI (usando correspondiente schema, usuario, password y puerto para cada ambiente)
+- ``` export HOUM_TESTING_DATABASE_URI='mysql+pymysql://<testing_user>:<testing_user_password>@localhost:<port>/testing' ``` Para correr en modo Testing sin WSGI (usando correspondiente schema, usuario, password y puerto para cada ambiente)
+- ``` export HOUM_PRODUCTIN_DATABASE_URI='mysql+pymysql://<testing_user>:<production_user_password>@localhost:<port>/production' ``` Para correr en modo Producción sin WSGI (usando correspondiente schema, usuario, password y puerto para cada ambiente)
+- ``` export API_SECRET_KEY="development"```
+- ``` export APP_ENVIRONMENT="[<development>|<testing>|<production>]"``` <...> dependiendo del ambiente a correr. 
+- ``` python3 main.py ``` dentro del directorio del proyecto para correr sin WSGI (no recomendado para ambientes productivos)
+- - Para correr utilizando WSGI (en este caso waitress para Gunicorn)
+- ``` pip3 install gunicorn```
+- ``` gunicorn --bind 0.0.0.0:5000 main:app ```
+
+### Rutas (end-points)
+La API utiliza una autentificación simple usando JWT para Python. Cada llamada debe entregar en un Header
+el token de autentificación. Por simplicidad se provee un solo token que es codificado una sola vez
+con un payload de ejemplo. Por simplicidad la decodificación no verifica que el payload decodificado
+coincida con los datos utilizados para generar el token. Como mejora, debería existir una tabla
+que registre los usuarios autorizados de la API junto con sus payloads, el token se debería generar
+con esos datos y luego al pasar el token a la API se debería corroborar la codificación en la DB.
+En la sección de mejoras de esta documentación se puede encontrar formas óptimas de resolver la seguridad
+de las llamadas a la API (mediante OAUTH2 por ejemplo).
+
+#### Headers
+
+- ``` x-access-tokens :  eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyIjoiZGllZ28iLCJlbWFpbCI6InRlc3QifQ.BBzMWAEaLOinBnqsiH0oWgCCQiuInqOriwgQgnMwcU8 ``` En modo productivo
+el token no debería guardarse ni este README ni versionarse en el repositorio. Los tokens de acceso se deberían
+generar una vez y no ser guardados en la DB (lo que se guarda es el payload decodificado). Para generar un nuevo token
+se puede hacer un python con la siguiente instrucción:
+
+``` jwt.encode(<payload>, app.config["SECRET_KEY"], algorithm='HS256') ```
+
+Además debe indicar en el request el content type del body del request:
+
+- ``` Content-Type: "application/json" ```
+
+Todas las rutas siguientes deben incluir los headers anteriores en cada llamada.
+
+#### Schemas
+Todas las rutas tienen un chequeo de schemas del payload pasado como application/json en el body.
+Los schemas están definidos en el archivo [config.py](./config.py). Cualquier error en el body o en el schema
+devuelve un payload:
+- ```{"error": "no valid payload"}``` cuando el payload no corresponde a formato Json.
+- ```{"error": "invalid schema"}``` cuando el schema es inválido.
+
+#### Rutas
+
+###### Status
+Se incluye una ruta que simplemente verifica que la API esté corriendo correctamente. Igualmente
+debe incluir los headers descritos anteriormente.
+
+- ``` http://localhost:5000/houm_challenge/status ``` Status de la API
+  - body: sin body
+  - response: ``` {api status ok} ``` con status code 200.
+  - Por simplicidad se deja de lado un mensaje de error con status 400 ya que el WSGI debería indicarlo.
+  - Ejemplo ``` curl -X POST -H 'Content-Type: application/json' -H 'x-access-tokens: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyIjoiZGllZ28iLCJlbWFpbCI6InRlc3QifQ.BBzMWAEaLOinBnqsiH0oWgCCQiuInqOriwgQgnMwcU8' -i http://localhost:5000/houm_challenge/status ```
+
+###### Houmer
+Permite ingresar un nuevo Houmer. Se incluye por completitud para no tener que llenar los
+Houmer manualmente.
+
+- ``` http://localhost:5000/houm_challenge/houmer ```
+    - body: ```{"name": "<value>", "email":"<value>"}```
+    - response: ``` {"message": "houmer inserted ok. id:<houmer_id>"} ``` houmer_id corresponde al id con el que se registró
+al Houmer. Status code 200.
+    - Cualquier error en el proceso responderá ```{"message": "Error"}``` status code 400.
+No se envía información específica del error por seguridad.
+    - Ejemplo ``` curl -X POST -H 'x-access-tokens: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyIjoiZGllZ28iLCJlbWFpbCI6InRlc3QifQ.BBzMWAEaLOinBnqsiH0oWgCCQiuInqOriwgQgnMwcU8' -H 'Content-Type: application/json' -i http://localhost:5000/houm_challenge/houmer --data '{"name":"Test", "email":"test@test.cl"}' ```
+
+###### Houmer Position
+Permite ingresar coordenadas de un Houmer con su determinado tiempo.
+
+- ``` http://localhost:5000/houm_challenge/houmer/position ```
+  - body: ```{"houmer_id" : <number>, "latitude": <decimal>, "longitude": <decimal>, "date" : "<YYYY-MM-DD HH:mm:SS>"}``` houmer_id corresponde al id del Houmer en la tabla houmer.
+  - response: ```{"message": "houmer position inserted ok. id:<houmer_position_id>"}``` houmer_position_id es el id asignado a la nueva tupla.
+  - Cualquier error en el proceso responderá ```{"message": "Error"}``` status code 400.
+No se envía información específica del error por seguridad.
+  - Ejemplo ``` curl -X POST -H 'x-access-tokens: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyIjoiZGllZ28iLCJlbWFpbCI6InRlc3QifQ.BBzMWAEaLOinBnqsiH0oWgCCQiuInqOriwgQgnMwcU8' -H 'Content-Type: application/json' -i http://localhost:5000/houm_challenge/houmer/position --data '{"houmer_id" : 1, "latitude": -70.1, "longitude": 20.2, "date" : "2022-07-14 16:40:00"}' ```
+
+###### Houmer visita propiedad (real state)
+Permite ingresar la visita de un Houmer a una propiedad.
+- ``` http://localhost:5000/houm_challenge/houmer/visit ```
+  - body: ```{"houmer_id": <numeric>, "real_state_id": <numeric>, "start_date": "<YYYY-MM-DD HH:mm:SS>", "end_date": "<YYYY-MM-DD HH:mm:SS>"}``` houmer_id
+es el id del houmer que visita una propiedad. real_state_id es el id de una propiedad en la tabla real_state. La fecha de inicio y la 
+fecha de término se calculan en la app (móvil), por esto que deben venir incluídas en el payload.
+  - response: ```{"message": "houmer visit real state inserted ok. id:<houmer_visit_real_state_id>"}``` status code 200
+houmer_visit_real_state_id es el id con el que ingresó la tupla.
+  - Cualquier error en el proceso responderá ```{"message": "Error"}``` status code 400.
+No se envía información específica del error por seguridad.
+  - Ejemplo ``` curl -X POST -H 'Content-Type: application/json' -H 'x-access-tokens: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyIjoiZGllZ28iLCJlbWFpbCI6InRlc3QifQ.BBzMWAEaLOinBnqsiH0oWgCCQiuInqOriwgQgnMwcU8' -i http://localhost:5000/houm_challenge/houmer/visit --data '{"houmer_id": 1, "real_state_id": 1, "start_date": "2022-07-14 16:43:00", "end_date": "2022-07-14 16:53:00"}' ```
+
+###### Coordenadas de las propiedades visitadas
+Permite obtener las coordenadas de las propiedades visitadas por un Houmer y el tiempo que se quedó en cada una 
+de ellas, para cierta fecha (día).
+
+- ``` http://localhost:5000/houm_challenge/houmer/visit/coordinates ```
+  - body: ```{"houmer_id":<numeric>, "date":<YYYY-MM-DD>"}``` houmer_id es el id del houmer que se 
+quiere consultar. date es la fecha (día) que se quiere consultar (notar que no se debe especificar hora).
+  - response: ```[{"latitude":<decimal>, "longitude":<decimal>, "spent_time":<HH:MM:SS>}]``` una lista
+con las coordenadas de las propiedades y el tiempo o duración de la visita. HH es cantidad de horas (puede ser mayor a 24 aunque
+no debería :) ), MM la cantidad de minutos (no necesariamente de dos cifras, porque pudo demorarse más de
+2 digitos, aunque sería raro :) ) y SS cantidad de segundos. Status code 200.
+  - Cualquier error en el proceso responderá ```{"message": "Error"}``` status code 400.
+No se envía información específica del error por seguridad.
+  - Ejemplo: ``` curl -X POST -H 'Content-Type: application/json' -H 'x-access-tokens: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyIjoiZGllZ28iLCJlbWFpbCI6InRlc3QifQ.BBzMWAEaLOinBnqsiH0oWgCCQiuInqOriwgQgnMwcU8' -i http://localhost:5000/houm_challenge/houmer/visit/coordinates --data '{"houmer_id":1, "date":"2022-07-14"}' ```
+
+###### Houmer excede rapidez
+Permite obtener todas las fechas (fecha y tiempo) en los que el Houmer excedió cierta rapidez.
+Para esto se consideran -por simplicidad- sólo las posiciones ingresadas en la ruta de posición.
+El cálculo consiste en la distancia entre los momentos (posiciones ingresadas) utilizando
+la función de distancia para coordenadas gps (haversine) y la diferencia de tiempo en horas entre
+cada posición.
+
+- ``` http://localhost:5000/houm_challenge/houmer/exceeded_speed ```
+  - body: ```{"houmer_id": <numeric>, "max_speed":<rapidez máxima>, "date":dia}``` houmer_id es el identificador
+del Houmer, max_speed la rapidez máxima y el date el día a contemplar (día sin hora).
+  - response: ```[<YYYY-MM-DD HH:mm:SS>]``` lista con las fechas (y tiempos) de la posición inicial
+correspondiente a una tupla posición que se excedió el límite de velocidad.
+  - Cualquier error en el proceso responderá ```{"message": "Error"}``` status code 400.
+No se envía información específica del error por seguridad.
+  - Ejemplo: ``` curl -X POST -H 'Content-Type: application/json' -H 'x-access-tokens: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyIjoiZGllZ28iLCJlbWFpbCI6InRlc3QifQ.BBzMWAEaLOinBnqsiH0oWgCCQiuInqOriwgQgnMwcU8' -i http://localhost:5000/houm_challenge/houmer/exceeded_speed --data '{"houmer_id": 1, "max_speed":100.0, "date":"2022-07-14"}' ``` 
+
+###### Propiedades
+Permite ingresar propiedades (real states) para efectos de completitud.
+
+- ``` http://localhost:5000/houm_challenge/real_state ```
+    - body: ```{"name":<string>, "latitude":<decimal>, "longitude":<decimal>}``` nombre y coordenadas
+de la propiedad.
+    - response: ``` {"message":"real state inserted ok. id:<real_state_id"} ``` real_state_id es el id con el que se ingresó la tupla. status 200.
+  - Cualquier error en el proceso responderá ```{"message": "Error"}``` status code 400.
+No se envía información específica del error por seguridad.
+    - Ejemplo: ``` curl -X POST -H 'x-access-tokens: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyIjoiZGllZ28iLCJlbWFpbCI6InRlc3QifQ.BBzMWAEaLOinBnqsiH0oWgCCQiuInqOriwgQgnMwcU8' -H 'Content-Type: application/json' -i http://localhost:5000/houm_challenge/real_state --data '{"name":"test real state", "latitude":-70.1, "longitude":20.1}' ```
+
+## Seguridad
 
 
-##Escalabilidad
+## Escalabilidad
 
 
-##Observabilidad
+## Observabilidad

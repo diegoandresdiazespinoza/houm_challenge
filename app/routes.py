@@ -103,8 +103,8 @@ def add_houmer_visit_real_state():
     try:
         houmer_id = request.json['houmer_id']
         real_state_id = request.json['real_state_id']
-        start_date = request.json['end_date']
-        end_date = request.json['start_date']
+        start_date = request.json['start_date']
+        end_date = request.json['end_date']
         houmer_visit_real_state = HoumerVisitRealState(houmer_id=houmer_id, real_state_id=real_state_id,
                                                        start_date=start_date, end_date=end_date)
         houmer_visit_real_state.save()
