@@ -1,0 +1,6 @@
+﻿PYTHONUNBUFFERED;1
+HOUM_DEVELOPMENT_DATABASE_URI;mysql+pymysql://development:develop1981$_@localhost:3306/development
+HOUM_TESTING_DATABASE_URI;mysql+pymysql://testing:testing1981$_@localhost:3306/testing
+HOUM_PRODUCTION_DATABASE_URI;mysql+pymysql://production:production1981$_@localhost:3306/production
+API_SECRET_KEY;development
+APP_ENVIRONMENT;development

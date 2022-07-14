@@ -1,7 +1,7 @@
 #Documentación: Solución a [Houm Challenge](houm_challenge.md)
 
-##Diseño
-######Supuestos 
+## Diseño
+###### Supuestos 
 - El dispositivo móvil del Houmer genera las coordenadas (latitud, longitud) y una fecha con tiempo que envía cada cierto tiempo a la API. La fecha se genera en el dispositivo.
 - El Houmer debe existir para enviar una posición.
 - Una propiedad (real state) queda determinada unívocamente por sus coordenadas (latitud, longitud). No existen dos propiedades con las mismas coordenadas.
