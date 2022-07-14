@@ -164,7 +164,11 @@ def get_houmer_exceeded_speed():
             spent_time = next_moment.date - moment.date
             distance = haversine.haversine((moment.latitude, moment.longitude),
                                            (next_moment.latitude, next_moment.longitude))
-            speed = distance / (spent_time.total_seconds() / 3600.0)
+            total_seconds = spent_time.total_seconds()
+            if total_seconds==0:
+                speed = max_speed
+            else:
+                speed = distance / (total_seconds / 3600.0)
             if speed >= max_speed:
                 speed_exceeded.append(moment.date.strftime("%Y-%m-%d %H:%M:%S"))
         return make_response(json.dumps(speed_exceeded), 200)
