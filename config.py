@@ -59,9 +59,10 @@ class Config:
         'type' : 'object',
         'properties' : {
             'houmer_id':{'type':'number'},
-            'date':{'type':'string', 'pattern':'^[0-9]{4}\-[0-9]{2}\-[0-9]{2}$'}
+            'date':{'type':'string', 'pattern':'^[0-9]{4}\-[0-9]{2}\-[0-9]{2}$'},
+            'max_speed' : {'type':'number'}
         },
-        'required' : ['houmer_id', 'date']
+        'required' : ['houmer_id', 'date', 'max_speed']
     }
 
     @staticmethod

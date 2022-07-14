@@ -1,6 +1,8 @@
 import datetime
 import json
 from functools import wraps
+
+import haversine as haversine
 import jwt as jwt
 from flask import Flask, request, jsonify, make_response, current_app
 from jsonschema.exceptions import ValidationError
@@ -125,19 +127,23 @@ def get_real_state_coordinates_visit():
 @validate_schema("HOUMER_EXCEEDED_SPEED_SCHEMA")
 def get_houmer_exceeded_speed():
     houmer_id = request.json["houmer_id"]
+    max_speed = float(request.json["max_speed"])
     start_date = datetime.datetime.strptime(request.json["date"], "%Y-%m-%d").replace(hour=0, minute=0, second=0)
     end_date = datetime.datetime.strptime(request.json["date"], "%Y-%m-%d").replace(hour=23, minute=59, second=59)
     moments:list[HoumerPosition] = db.session.query(HoumerPosition).filter(HoumerPosition.houmer_id==houmer_id, HoumerPosition.date>=start_date, HoumerPosition.date<=end_date).order_by(HoumerPosition.date).all()
     index = 0
-    spent_times = []
+    speed_exceeded = []
     for moment in moments:
         index += 1
         if index >= len(moments):
             break
         next_moment = moments[index]
         spent_time = next_moment.date - moment.date
-        spent_times.append(str(spent_time))
-    return make_response(json.dumps(spent_times), 200)
+        distance = haversine.haversine((moment.latitude, moment.longitude),(next_moment.latitude, next_moment.longitude))
+        speed = distance / (spent_time.total_seconds()/3600.0)
+        if speed >= max_speed:
+            speed_exceeded.append(moment.date.strftime("%Y-%m-%d %H:%M:%S"))
+    return make_response(json.dumps(speed_exceeded), 200)
 
 
 
