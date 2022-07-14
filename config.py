@@ -1,4 +1,3 @@
-# config.py
 import os
 
 
@@ -11,18 +10,18 @@ class Config:
             'houmer_id': {'type': 'number'},
             'longitude': {'type': 'number'},
             'latitude': {'type': 'number'},
-            'date':{'type':'string', 'pattern':'^[0-9]{4}\-[0-9]{2}\-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$'}
+            'date': {'type': 'string', 'pattern': '^[0-9]{4}\-[0-9]{2}\-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$'}
         },
-        'required': ['houmer_id','longitude', 'latitude', 'date']
+        'required': ['houmer_id', 'longitude', 'latitude', 'date']
     }
 
     HOUMER_SCHEMA = {
-        'type':'object',
-        'properties':{
-            'name':{'type':'string'},
-            'email':{'type':'string', 'format':'email'}
+        'type': 'object',
+        'properties': {
+            'name': {'type': 'string'},
+            'email': {'type': 'string', 'format': 'email'}
         },
-        'required':['name', 'email']
+        'required': ['name', 'email']
     }
 
     HOUMER_VISIT_REAL_STATE_SCHEMA = {
@@ -30,8 +29,8 @@ class Config:
         'properties': {
             'houmer_id': {'type': 'number'},
             'real_state_id': {'type': 'number'},
-            'start_date': {'type': 'string', 'pattern':'^[0-9]{4}\-[0-9]{2}\-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$'},
-            'end_date': {'type': 'string', 'pattern':'^[0-9]{4}\-[0-9]{2}\-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$'}
+            'start_date': {'type': 'string', 'pattern': '^[0-9]{4}\-[0-9]{2}\-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$'},
+            'end_date': {'type': 'string', 'pattern': '^[0-9]{4}\-[0-9]{2}\-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$'}
         },
         'required': ['houmer_id', 'real_state_id', 'start_date', 'end_date']
     }
@@ -47,22 +46,22 @@ class Config:
     }
 
     HOUMER_VISIT_COORDINATES_SCHEMA = {
-        'type' : 'object',
-        'properties' : {
-            'houmer_id' : {'type':'number'},
-            'date' : {'type':'string', 'pattern':'^[0-9]{4}\-[0-9]{2}\-[0-9]{2}$'}
+        'type': 'object',
+        'properties': {
+            'houmer_id': {'type': 'number'},
+            'date': {'type': 'string', 'pattern': '^[0-9]{4}\-[0-9]{2}\-[0-9]{2}$'}
         },
-        'required' : ['houmer_id', 'date']
+        'required': ['houmer_id', 'date']
     }
 
     HOUMER_EXCEEDED_SPEED_SCHEMA = {
-        'type' : 'object',
-        'properties' : {
-            'houmer_id':{'type':'number'},
-            'date':{'type':'string', 'pattern':'^[0-9]{4}\-[0-9]{2}\-[0-9]{2}$'},
-            'max_speed' : {'type':'number'}
+        'type': 'object',
+        'properties': {
+            'houmer_id': {'type': 'number'},
+            'date': {'type': 'string', 'pattern': '^[0-9]{4}\-[0-9]{2}\-[0-9]{2}$'},
+            'max_speed': {'type': 'number'}
         },
-        'required' : ['houmer_id', 'date', 'max_speed']
+        'required': ['houmer_id', 'date', 'max_speed']
     }
 
     @staticmethod
@@ -72,17 +71,16 @@ class Config:
 
 class DevelopmentConfig(Config):
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = "mysql+pymysql://development:develop1981$_@localhost:3306/development"
-    SECRET_KEY = "development"
+    SQLALCHEMY_DATABASE_URI = os.getenv("HOUM_DEVELOPMENT_DATABASE_URI")
 
 
 class TestingConfig(Config):
     TESTING = True
-    SQLALCHEMY_DATABASE_URI = os.getenv("TEST_DATABASE_URL")
+    SQLALCHEMY_DATABASE_URI = os.getenv("HOUM_TESTING_DATABASE_URI")
 
 
 class ProductionConfig(Config):
-    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL")
+    SQLALCHEMY_DATABASE_URI = os.getenv("HOUM_PRODUCTION_DATABASE_URI")
 
 
 config = {
@@ -91,4 +89,3 @@ config = {
     "production": ProductionConfig,
     "default": DevelopmentConfig
 }
-
