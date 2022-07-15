@@ -27,6 +27,9 @@ se hace al modelo de datos expuesto en la base de datos.
 - Para la base de datos se utiliza Mysql 8.0.29.
 - Las librerías utilizadas se pueden ver en [requirements](./requirements.txt)
 - Se utiliza un ORM mediante SQLAlchemy; la creación de las tablas se hace automáticamente.
+- Se utiliza ambiente Windows (aunque las instrucciones deberían funcionar en Linux).
+- Se utiliza para test unitarios unittest de pytest
+- Se prueba en windows usando WSGI waitress
 ###### Diagrama Entidad-Relación
 Se considera el siguiente diagrama entidad relación para la base de datos.
 ![Diagrama entidad relación](./drawings/er.png)
@@ -51,6 +54,7 @@ La estructura de directorios es la siguiente:
 - models.py: contiene todos los modelos para ser usados como ORM mediante SQLAlchemy.
 - drawings: archivos de imágenes para README.md
 - houm_challenge.md: archivo que contiene en markdown las instrucciones del challenge.
+- testing incluye los test unitarios utilizando unittest.
 
 
 ## Base de datos
@@ -63,7 +67,7 @@ ATENCIÓN: Las tablas necesarias se crean automáticamente al inicio (en caso de
 que se utiliza SQLAlchemy como ORM. Crearlas manualmente puede causar errores en la ejecución. 
 Los schemas de las bases correspondientes a los distintos ambientes deben crearse manualmente.
 Los usuarios y permisos de los schemas en la base de datos deben crearse manualmente. 
- 
+
 
 ### Configuración y ejecución en Windows
 - ``` pip3 install -r requirements.txt ``` para instalar dependencias de librerías
@@ -208,10 +212,62 @@ de la propiedad.
 No se envía información específica del error por seguridad.
     - Ejemplo: ``` curl -X POST -H 'x-access-tokens: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyIjoiZGllZ28iLCJlbWFpbCI6InRlc3QifQ.BBzMWAEaLOinBnqsiH0oWgCCQiuInqOriwgQgnMwcU8' -H 'Content-Type: application/json' -i http://localhost:5000/houm_challenge/real_state --data '{"name":"test real state", "latitude":-70.1, "longitude":20.1}' ```
 
-## Seguridad
+
+##Testing
+Se utiliza modulo unittest. Para ejecutarlos primero debe estar corriendo el servicio (mediante alguno 
+de los métodos mencionados):
+
+``` python3 -m unittest discover ``` dentro del directorio testing.
 
 
-## Escalabilidad
+## Posibles mejoras
+Por simplicidad y para enfocarse en la solución de los requerimientos se tomaron ciertas decisiones y algunas
+concesiones. A continuación se detallan algunas mejoras que podrían haberse introducido:
+
+###### Base de datos
+- La base de datos no está manejando llaves únicas por lo que pueden existir duplicidades para las 
+propiedades y los houmers. Para el caso particular no representa mayor problema, sin embargo
+se deberían insertar llaves primarias más ajustadas para que esto no ocurra.
+- No se consideraron la inserción de índices, sin embargo los siguientes índices son recomendados:
+  - Particionamiento por date para la tabla houmer_position. Esta tabla será intensiva en escritura,
+y tendrá muchos datos dado que por cada houmer cada día se insertarán muchas posiciones. 
+El particionamiento por fecha en MySql permitiría que la búsqueda e inserción sea más expedita
+sin necesidad del sobre costo de un índice. De todos modos el particionamiento actualmente en MySql 
+depende del motor. Más información [MySql 8 Partitioning](https://dev.mysql.com/doc/refman/8.0/en/partitioning.html)
+  - Para la tabla houmer se debería usar un índice hash en name o alguna llave compuesta.
+  - Para la tabla real_state se podría usar un índice Hash compuesto por longitud y latitud,
+considerando que las propiedades tienen una única tupla de coordenadas. Para el caso de
+departamentos habría que agregar algún campo que especifique en el esquema de la tabla. La tabla
+real_state es intensiva en lectura más que en escritura.
+  - Para la tabla houmer_position conviene un índice B-Tree por el id del houmer; con un árbol
+la búsqueda sería bastante rápida y el costo en espacio del índice no sería tanto dado que se 
+consideraría un bigint solamente.
+  - Para la tabla houmer_visit_real_state conviene un B-Tree por el id del houmer (para el caso
+particular de las consultas del Challenge).
+
+- Habría que hacer un análisis de costo en espacio de las tablas. La tabla más pesada sería
+la de houmer_position dado que diariamente se agregarían muchos datos. Un particionamiento
+ayudaría con el backup y con la búsqueda. De todos modos la tabla contiene actualmente sólo 3
+campos (2 decimales, un bigint y un date) por tanto eso bajaría un poco los costos en espacio.
+- Se puede pensar en una base de datos no relacional (como mongoDb) donde se podría utilizar mejor
+el uso de nodos y clusters, además evitaría el uso de modelos de tablas un poco más rígidos.
+- Faltaría utilizar alguna herramienta de migrations como Alembic para SqlAlchemy [Alembic](https://alembic.sqlalchemy.org/en/latest/)
+de este modo el versionamiento de cambios en la base de datos se hace más manejable.
+
+###### Seguridad
+- Falta utilizar algún esquema más seguro y actualizado para el uso del token en las transacciones
+con la API. Lo ideal es OAUTH 2.0. Podría usarse alguna herramienta como [Cognito de AWS](https://aws.amazon.com/es/cognito/)
+o el equivalente [Identity GCP](https://cloud.google.com/identity/).
+- Uso de protocolo HTTPS.
+- También el WSGI debería aceptar peticiones desde ciertas IP privadas.
+
+###### Arquitectura
+Se puede hacer un diseño más acorde con un modelo serverless de la siguiente forma:
+- Base de datos en la nube (por ejemplo Aurora DB en AWS) utilizando Amazon RDS Proxy para
+un correcto escalamiento y reliability,
+- La api se puede integrar utilizando Api Gateway de AWS o ApiGee y ApiGateway de GCP.
+- También se puede utilizar Lambda AWS conectado con API Gateway. Para Lambda bastaría
+con dockerizar la aplicación y subirla o simplemente subir el código, modificar los routes por
+handlers.
 
 
-## Observabilidad

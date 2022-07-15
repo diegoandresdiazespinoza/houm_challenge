@@ -1,6 +1,11 @@
 import os
 
-
+'''
+    Clase base para las configuraciones de cada ambiente de la app de Flask.
+    Se agregan los schema que servirán para ser verificados antes de las llamadas
+    a cada ruta.
+    
+'''
 class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 

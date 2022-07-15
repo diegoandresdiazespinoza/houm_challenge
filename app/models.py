@@ -2,7 +2,12 @@ from datetime import datetime
 
 from . import db
 
-
+'''
+    Clase de modelo base de la que todo modelo hereda.
+    Por el momento permite simplificar y encapsular
+    el método save de cada modelo relacional.
+    
+'''
 class BaseModel(db.Model):
     __abstract__ = True
 

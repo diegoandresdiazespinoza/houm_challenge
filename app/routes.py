@@ -12,7 +12,13 @@ from jsonschema.validators import validate
 from app import app, db
 from app.models import HoumerPosition, Houmer, HoumerVisitRealState, RealState
 
-
+'''
+    Define mediante un wrap y decorators un método único y centralizado
+    de autentificación. El método en sí es cuestionable, debería
+    usarse OAUTH 2.0.
+    De todos modos la función se llama antes de cada llamado a un route y en caso
+    de que no hayan excepciones llama a la función siguiente desde donde fue llamada.
+'''
 def token_required(f):
     @wraps(f)
     def decorator(*args, **kwargs):
@@ -37,7 +43,12 @@ def token_required(f):
 
     return decorator
 
-
+'''
+    Validador de esquemas de los paylod de cada route.
+    Valida el esquema y devuelve la función de llamada original.
+    Se ejecuta antes de cada llamada a la ruta y después de la autentificación
+    
+'''
 def validate_schema(schema_name):
     def decorator(f):
         @wraps(f)
@@ -56,13 +67,19 @@ def validate_schema(schema_name):
 
     return decorator
 
-
+'''
+    Status básico para verificar la integridad.
+'''
 @app.route('/houm_challenge/status', methods=['POST', 'GET'])
 @token_required
 def status():
     return make_response('api status ok', 200)
 
-
+'''
+    Ruta para agregar Houmers.
+    Falta agregar los métodos para eliminación, actualización y obtención.
+    
+'''
 @app.route('/houm_challenge/houmer/', methods=['POST'])
 @token_required
 @validate_schema("HOUMER_SCHEMA")
@@ -77,6 +94,10 @@ def add_houmer():
     except Exception:
         return make_response({"message": "Error"}, 400)
 
+'''
+    Ruta para agregar posiciones de un Houmer.
+    Simplemente crea al objeto a partir de un modelo y luego lo persiste.
+'''
 @app.route('/houm_challenge/houmer/position/', methods=['POST'])
 @token_required
 @validate_schema("POSITION_SCHEMA")
@@ -95,7 +116,10 @@ def add_houmer_position():
     except Exception:
         return make_response({"message": "Error"}, 400)
 
-
+'''
+    Ruta para ingresar las visitas de los houmers a las propiedades.
+    Simplemente crea el objeto y persiste.
+'''
 @app.route('/houm_challenge/houmer/visit/', methods=['POST'])
 @token_required
 @validate_schema("HOUMER_VISIT_REAL_STATE_SCHEMA")
@@ -112,7 +136,12 @@ def add_houmer_visit_real_state():
         return make_response({"message": f"houmer visit real state inserted ok. id:{houmer_visit_real_state_id}"}, 200)
     except Exception:
         return make_response({"message": "Error"}, 400)
-
+'''
+    Obtiene las visitas utilizando una query con filtros (condiciones de búsqueda)
+    Por cada visita obtiene las propiedades para las coordenadas.
+    Podría optimizarse pasando todos los id de las propiedades en una sola query y hacer un diccionario
+    con los id de las propiedades y sus coordenadas.
+'''
 @app.route('/houm_challenge/houmer/visit/coordinates', methods=['POST'])
 @token_required
 @validate_schema("HOUMER_VISIT_COORDINATES_SCHEMA")
@@ -140,7 +169,10 @@ def get_real_state_coordinates_visit():
     except Exception:
         return make_response({"message": "Error"}, 400)
 
-
+'''
+    Obtiene las posiciones con query con filtro, calcula la distancia y el tiempo
+    y verifica si excede el límite
+'''
 @app.route('/houm_challenge/houmer/exceeded_speed', methods=['POST'])
 @token_required
 @validate_schema("HOUMER_EXCEEDED_SPEED_SCHEMA")
@@ -175,7 +207,11 @@ def get_houmer_exceeded_speed():
     except Exception:
         return make_response({"message": "Error"}, 400)
 
-
+'''
+    Permite ingresar las propiedades.
+    Faltaría los métodos para actualizar, obtener y eliminar.
+    
+'''
 @app.route('/houm_challenge/real_state/', methods=['POST'])
 @token_required
 @validate_schema("REAL_STATE_SCHEMA")

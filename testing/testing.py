@@ -2,7 +2,14 @@ import json
 from unittest import TestCase
 import requests
 
-
+'''
+    Dado que unittest no mantiene un orden de qué test se ejecutan primero,
+    entonces se insertan datos duplicados en algunos test para que se verifique
+    correctamente.
+    Se puede mejorar bastante.
+    Faltan test de esfuerzo y regresión.
+    
+'''
 class HoumChallengeUnitTest(TestCase):
     headers = {"Content-Type": "application/json",
                "x-access-tokens": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyIjoiZGllZ28iLCJlbWFpbCI6InRlc3QifQ.BBzMWAEaLOinBnqsiH0oWgCCQiuInqOriwgQgnMwcU8"}
